@@ -6,7 +6,7 @@
 [![GitHub stars](https://img.shields.io/github/stars/RohanBansal/FeedbackFusion?style=social)](https://github.com/RohanBansal/FeedbackFusion/stargazers)
 [![GitHub forks](https://img.shields.io/github/forks/RohanBansal/FeedbackFusion?style=social)](https://github.com/RohanBansal/FeedbackFusion/network/members)
 [![GitHub issues](https://img.shields.io/github/issues/RohanBansal/FeedbackFusion?style=social)](https://github.com/RohanBansal/FeedbackFusion/issues)
-[![GitHub last commit](https://img.shields.io/github/last-commit/RohanBansal/FeedbackFusion)](https://github.com/RohanBansal/FeedbackFusion/commits/main)
+
 
 **Feedback Fusion** is a professional-grade Java AWT desktop application for managing feedback records.  
 It provides a user-friendly GUI to perform standard CRUD operations (Create, Read, Update, Delete) and view feedback in a structured format.
