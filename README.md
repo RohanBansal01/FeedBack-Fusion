@@ -31,7 +31,7 @@ It provides a user-friendly GUI to perform standard CRUD operations (Create, Rea
   - ID (for Update/Delete)
   - Category (Choice dropdown)
   - Rating (1–5)
-  - Comments
+  - Comments (Comment/Review about Local Hotel)
 - Displays feedback in a read-only table-like text area.
 - Status label shows success and error messages.
 - Optional background image for enhanced UI aesthetics.
