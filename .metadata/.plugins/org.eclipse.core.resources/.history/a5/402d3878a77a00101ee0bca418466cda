@@ -1,0 +1,17 @@
+package com.feedbackfusion.app;
+import com.feedbackfusion.presentation.FeedbackForm;
+import com.feedbackfusion.repository.FeedbackRepository;
+import com.feedbackfusion.service.FeedbackService;
+
+/**
+ * The main entry point for the Feedback Fusion application.
+ * This class is responsible for initializing and "fusing" the components
+ * of the application's different layers.
+ */
+public class Main {
+    public static void main(String[] args) {
+        FeedbackRepository feedbackRepository = new FeedbackRepository();
+        FeedbackService feedbackService = new FeedbackService(feedbackRepository);
+        new FeedbackForm(feedbackService);
+    }
+}

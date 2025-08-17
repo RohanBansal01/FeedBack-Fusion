@@ -1,0 +1,122 @@
+package com.feedbackfusion.presentation;
+
+import com.feedbackfusion.model.Feedback;
+import com.feedbackfusion.service.FeedbackService;
+
+import java.awt.*;
+import java.awt.event.*;
+import java.sql.SQLException;
+
+public class FeedbackForm extends Frame {
+
+    private final FeedbackService feedbackService;
+    private final Choice feedbackTypeChoice;
+    private final TextField ratingField;
+    private final TextArea commentsArea;
+    private final Label statusLabel;
+
+    public FeedbackForm(FeedbackService feedbackService) {
+        this.feedbackService = feedbackService;
+
+        // Frame setup
+        setTitle("Feedback Fusion");
+        setSize(500, 500);
+        setLayout(new BorderLayout(10, 10));
+        setBackground(new Color(245, 245, 245)); // light background
+
+        // ---------- Header ----------
+        Label header = new Label("Feedback Fusion", Label.CENTER);
+        header.setFont(new Font("Arial", Font.BOLD, 24));
+        header.setForeground(new Color(0, 102, 204));
+        add(header, BorderLayout.NORTH);
+
+        // ---------- Form Panel ----------
+        Panel formPanel = new Panel(new GridBagLayout());
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(10, 10, 10, 10); // padding
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+
+        // Category
+        gbc.gridx = 0; gbc.gridy = 0;
+        formPanel.add(new Label("Category:"), gbc);
+
+        feedbackTypeChoice = new Choice();
+        feedbackTypeChoice.add("Food Quality");
+        feedbackTypeChoice.add("Service");
+        feedbackTypeChoice.add("Ambiance");
+        feedbackTypeChoice.add("Cleanliness");
+        gbc.gridx = 1;
+        formPanel.add(feedbackTypeChoice, gbc);
+
+        // Rating
+        gbc.gridx = 0; gbc.gridy = 1;
+        formPanel.add(new Label("Rating (1-5):"), gbc);
+
+        ratingField = new TextField(5);
+        gbc.gridx = 1;
+        formPanel.add(ratingField, gbc);
+
+        // Comments
+        gbc.gridx = 0; gbc.gridy = 2;
+        gbc.anchor = GridBagConstraints.NORTH;
+        formPanel.add(new Label("Comments:"), gbc);
+
+        commentsArea = new TextArea(5, 30);
+        gbc.gridx = 1;
+        formPanel.add(commentsArea, gbc);
+
+        add(formPanel, BorderLayout.CENTER);
+
+        // ---------- Submit Panel ----------
+        Panel buttonPanel = new Panel(new FlowLayout());
+        Button submitButton = new Button("Submit Feedback");
+        submitButton.setBackground(new Color(0, 153, 76));
+        submitButton.setForeground(Color.WHITE);
+        submitButton.setFont(new Font("Arial", Font.BOLD, 14));
+        buttonPanel.add(submitButton);
+        add(buttonPanel, BorderLayout.SOUTH);
+
+        // ---------- Status Label ----------
+        statusLabel = new Label(" ", Label.CENTER);
+        statusLabel.setFont(new Font("Arial", Font.ITALIC, 12));
+        add(statusLabel, BorderLayout.SOUTH);
+
+        // Event listener
+        submitButton.addActionListener(e -> handleSubmit());
+
+        // Window close
+        addWindowListener(new WindowAdapter() {
+            public void windowClosing(WindowEvent we) {
+                dispose();
+            }
+        });
+
+        setVisible(true);
+    }
+
+    private void handleSubmit() {
+        try {
+            String feedbackType = feedbackTypeChoice.getSelectedItem();
+            int rating = Integer.parseInt(ratingField.getText().trim());
+            String comments = commentsArea.getText().trim();
+
+            Feedback feedback = new Feedback(feedbackType, rating, comments);
+
+            feedbackService.submitFeedback(feedback);
+            statusLabel.setForeground(new Color(0, 128, 0));
+            statusLabel.setText("✅ Thank you! Feedback submitted.");
+            ratingField.setText("");
+            commentsArea.setText("");
+
+        } catch (NumberFormatException e) {
+            statusLabel.setForeground(Color.RED);
+            statusLabel.setText("⚠ Rating must be a valid number.");
+        } catch (IllegalArgumentException e) {
+            statusLabel.setForeground(Color.RED);
+            statusLabel.setText("⚠ " + e.getMessage());
+        } catch (SQLException e) {
+            statusLabel.setForeground(Color.RED);
+            statusLabel.setText("⚠ Database error. Please try again later.");
+        }
+    }
+}

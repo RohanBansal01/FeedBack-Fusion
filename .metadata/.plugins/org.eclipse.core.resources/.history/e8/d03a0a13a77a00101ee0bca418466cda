@@ -1,0 +1,36 @@
+package com.feedbackfusion.service;
+
+import com.feedbackfusion.model.Feedback;
+import com.feedbackfusion.repository.FeedbackRepository;
+import java.sql.SQLException;
+
+/**
+ * Manages the core business logic for handling feedback.
+ * This class is loosely coupled from the AWT GUI and the JDBC code.
+ */
+public class FeedbackService {
+
+    private final FeedbackRepository feedbackRepository;
+    private final FeedbackValidator feedbackValidator;
+
+    /**
+     * Constructs the service with its dependencies. This allows for
+     * easy testing and maintenance.
+     * @param feedbackRepository The repository used for database operations.
+     */
+    public FeedbackService(FeedbackRepository feedbackRepository) {
+        this.feedbackRepository = feedbackRepository;
+        this.feedbackValidator = new FeedbackValidator();
+    }
+
+    /**
+     * Processes and saves a new feedback entry.
+     * @param feedback The Feedback object to be saved.
+     * @throws IllegalArgumentException If the feedback data is invalid.
+     * @throws SQLException If a database error occurs.
+     */
+    public void submitFeedback(Feedback feedback) throws IllegalArgumentException, SQLException {
+        feedbackValidator.validate(feedback);
+        feedbackRepository.save(feedback);
+    }
+}

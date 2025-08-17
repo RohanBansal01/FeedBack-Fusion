@@ -1,0 +1,28 @@
+package com.feedbackfusion.model;
+
+/**
+ * A simple Plain Old Java Object (POJO) representing a customer feedback entry.
+ * This class is a core part of the data model and has no business logic.
+ */
+public class Feedback {
+    private String feedbackType;
+    private int rating;
+    private String comments;
+
+    /**
+     * Constructs a new Feedback object with the given details.
+     * @param feedbackType The category of the feedback (e.g., "Service", "Quality").
+     * @param rating The numerical rating given by the customer (1-5).
+     * @param comments Optional comments provided by the customer.
+     */
+    public Feedback(String feedbackType, int rating, String comments) {
+        this.feedbackType = feedbackType;
+        this.rating = rating;
+        this.comments = comments;
+    }
+
+    // Getters
+    public String getFeedbackType() { return feedbackType; }
+    public int getRating() { return rating; }
+    public String getComments() { return comments; }
+}

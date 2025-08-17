@@ -1,0 +1,4 @@
+module com.feedbackfusion.personalfinancetracker {
+    requires java.sql;
+    requires java.desktop;
+}

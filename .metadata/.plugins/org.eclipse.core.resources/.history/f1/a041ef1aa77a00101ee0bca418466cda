@@ -1,0 +1,136 @@
+package com.feedbackfusion.presentation;
+
+import com.feedbackfusion.model.Feedback;
+import com.feedbackfusion.service.FeedbackService;
+
+import java.awt.*;
+import java.awt.event.*;
+import java.sql.SQLException;
+
+/**
+ * The AWT-based graphical user interface for the Feedback Fusion application.
+ * This class is responsible for presenting the user interface and capturing
+ * input, acting as a "thin client" to the service layer.
+ */
+public class FeedbackForm extends Frame {
+
+    private final FeedbackService feedbackService;
+    private final Choice feedbackTypeChoice;
+    private final TextField ratingField;
+    private final TextArea commentsArea;
+    private final Label statusLabel;
+
+    /**
+     * Constructs the feedback form, initializing all UI components and
+     * linking the action listeners to the service layer.
+     * @param feedbackService The service used to process feedback submissions.
+     */
+    public FeedbackForm(FeedbackService feedbackService) {
+        this.feedbackService = feedbackService;
+
+        // Frame setup
+        setTitle("✨ Feedback Fusion ✨");
+        setSize(500, 500);
+        setLayout(new BorderLayout(15, 15));
+        setBackground(new Color(245, 245, 245)); // light grey
+        setFont(new Font("Arial", Font.PLAIN, 14));
+
+        // ==== Top Header ====
+        Label header = new Label("We value your feedback!", Label.CENTER);
+        header.setFont(new Font("Arial", Font.BOLD, 20));
+        header.setForeground(new Color(0, 102, 204));
+        add(header, BorderLayout.NORTH);
+
+        // ==== Center Form Panel ====
+        Panel formPanel = new Panel(new GridLayout(6, 2, 12, 12));
+        formPanel.setBackground(Color.WHITE);
+        formPanel.setFont(new Font("Arial", Font.PLAIN, 14));
+        formPanel.setPreferredSize(new Dimension(400, 300));
+
+        feedbackTypeChoice = new Choice();
+        feedbackTypeChoice.add("Food Quality");
+        feedbackTypeChoice.add("Service");
+        feedbackTypeChoice.add("Ambiance");
+        feedbackTypeChoice.add("Cleanliness");
+
+        ratingField = new TextField(5);
+        commentsArea = new TextArea(5, 30);
+
+        formPanel.add(new Label("Category:"));
+        formPanel.add(feedbackTypeChoice);
+
+        formPanel.add(new Label("Rating (1-5):"));
+        formPanel.add(ratingField);
+
+        formPanel.add(new Label("Comments:"));
+        formPanel.add(commentsArea);
+
+        // Empty cells for spacing
+        formPanel.add(new Label(""));
+        formPanel.add(new Label(""));
+
+        add(formPanel, BorderLayout.CENTER);
+
+        // ==== Bottom Panel (Button + Status) ====
+        Panel bottomPanel = new Panel(new FlowLayout(FlowLayout.CENTER, 20, 10));
+
+        Button submitButton = new Button("🚀 Submit Feedback");
+        submitButton.setFont(new Font("Arial", Font.BOLD, 16));
+        submitButton.setBackground(new Color(0, 153, 76));
+        submitButton.setForeground(Color.WHITE);
+
+        statusLabel = new Label("");
+        statusLabel.setFont(new Font("Arial", Font.BOLD, 12));
+        statusLabel.setForeground(Color.RED);
+
+        bottomPanel.add(submitButton);
+        bottomPanel.add(statusLabel);
+
+        add(bottomPanel, BorderLayout.SOUTH);
+
+        // ==== Event listener for the submit button ====
+        submitButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                handleSubmit();
+            }
+        });
+
+        // Window closing event
+        addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent we) {
+                dispose();
+            }
+        });
+
+        setVisible(true);
+    }
+
+    private void handleSubmit() {
+        try {
+            String feedbackType = feedbackTypeChoice.getSelectedItem();
+            int rating = Integer.parseInt(ratingField.getText());
+            String comments = commentsArea.getText();
+
+            Feedback feedback = new Feedback(feedbackType, rating, comments);
+
+            feedbackService.submitFeedback(feedback);
+
+            statusLabel.setForeground(new Color(0, 153, 0));
+            statusLabel.setText("✅ Thank you! Feedback submitted.");
+            ratingField.setText("");
+            commentsArea.setText("");
+
+        } catch (NumberFormatException e) {
+            statusLabel.setForeground(Color.RED);
+            statusLabel.setText("❌ Rating must be a valid number.");
+        } catch (IllegalArgumentException e) {
+            statusLabel.setForeground(Color.RED);
+            statusLabel.setText("❌ " + e.getMessage());
+        } catch (SQLException e) {
+            statusLabel.setForeground(Color.RED);
+            statusLabel.setText("⚠ Database error. Please try again later.");
+        }
+    }
+}

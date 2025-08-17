@@ -1,0 +1,5 @@
+package com.feedbackfusion.model;
+
+public class Feedback {
+
+}

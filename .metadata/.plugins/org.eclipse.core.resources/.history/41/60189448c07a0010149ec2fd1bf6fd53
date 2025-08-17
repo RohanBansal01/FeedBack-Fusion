@@ -1,0 +1,12 @@
+package com.feedbackfusion.app;
+
+import com.feedbackfusion.presentation.FeedbackForm;
+import com.feedbackfusion.service.FeedbackService;
+
+public class Main {
+    public static void main(String[] args) {
+        // Composition root
+        FeedbackService service = new FeedbackService();
+        new FeedbackForm(service);
+    }
+}

@@ -1,0 +1,416 @@
+package com.feedbackfusion.presentation;
+
+import com.feedbackfusion.model.Feedback;
+import com.feedbackfusion.service.FeedbackService;
+
+import java.awt.*;
+import java.awt.event.*;
+import java.sql.SQLException;
+import java.util.List;
+import javax.imageio.ImageIO;
+import java.io.File;
+import java.io.IOException;
+
+/**
+ * <h1>FeedbackForm</h1>
+ * <p>
+ * AWT-based GUI for the Feedback Fusion application. This window provides a simple
+ * interface to perform CRUD operations (Create, Read, Update, Delete) on feedback
+ * records via a {@link FeedbackService}. It also displays status messages and
+ * supports an optional background image.
+ * </p>
+ *
+ * <h2>Main UI Areas</h2>
+ * <ul>
+ *   <li><b>Header</b> — Window title</li>
+ *   <li><b>Form</b> — Inputs for ID, Category, Rating, and Comments</li>
+ *   <li><b>Controls</b> — Buttons for Create, Read All, Update, Delete, Clear Fields</li>
+ *   <li><b>Status</b> — A line that shows success or error messages</li>
+ *   <li><b>List</b> — A text area showing formatted query results (Read All)</li>
+ * </ul>
+ *
+ * <h2>Background Image</h2>
+ * <p>
+ * Optionally draws an image behind the UI. The code attempts to load
+ * {@code src/resources/background.png}. If not found, the UI falls back
+ * to a plain color background.
+ * </p>
+ *
+ * <h2>Threading</h2>
+ * <p>
+ * This AWT UI is single-threaded with respect to the Event Dispatch Thread (EDT).
+ * Database calls are performed synchronously for simplicity and are wrapped with
+ * exception handling that surfaces messages in the status label.
+ * </p>
+ *
+ * @author Rohan Bansal
+ * @version 1.0
+ * @since 1.0
+ */
+public class FeedbackForm extends Frame {
+
+    /**
+     * Reference to the business-service layer that encapsulates validation and
+     * repository access. All CRUD operations are delegated to this service.
+     */
+    private final FeedbackService service;
+
+    // --------------------
+    // UI FIELDS / CONTROLS
+    // --------------------
+
+    /**
+     * Text field for the feedback ID. Used for Update and Delete operations.
+     */
+    private final TextField idField = new TextField(6);
+
+    /**
+     * Dropdown (Choice) for selecting a feedback category/type.
+     * Populated with a fixed list of options.
+     */
+    private final Choice typeChoice = new Choice();
+    
+    
+  
+
+    /**
+     * Text field for entering the rating (must be an integer 1–5).
+     */
+    private final TextField ratingField = new TextField(5);
+
+    /**
+     * Multi-line text area for entering additional comments.
+     */
+    private final TextArea commentsArea = new TextArea(4, 40);
+
+    /**
+     * Read-only multi-line text area that displays the results of "Read All"
+     * as a simple table-like formatted text.
+     */
+    private final TextArea listArea = new TextArea(12, 60);
+
+    /**
+     * One-line label for showing transient status messages (success or error).
+     */
+    private final Label statusLabel = new Label(" ");
+
+    // --------------------
+    // VISUALS
+    // --------------------
+
+    /**
+     * Optional background image drawn across the window; may be {@code null}
+     * when the image file is not found or fails to load.
+     */
+    private Image backgroundImage;
+
+    /**
+     * Constructs and initializes the Feedback Fusion window, wires up all AWT components,
+     * attempts to load the background image, and registers event listeners for buttons
+     * and window-close behavior.
+     *
+     * @param service the {@link FeedbackService} that will handle all CRUD operations
+     *                invoked by this form. Must not be {@code null}.
+     */
+    public FeedbackForm(FeedbackService service) {
+        this.service = service;
+
+        // --------------------
+        // Load background image (optional)
+        // --------------------
+        try {
+            backgroundImage = ImageIO.read(
+                    new File("src/resources/background.png")
+            );
+        } catch (IOException e) {
+            System.out.println("⚠ Background image not found, using plain color.");
+            backgroundImage = null;
+        }
+
+        // --------------------
+        // Window setup
+        // --------------------
+        setTitle("Feedback Fusion");
+        setSize(700, 600);
+        setLayout(new BorderLayout());
+
+        /**
+         * Custom container panel that paints the background image (if available)
+         * before laying out and painting child components.
+         */
+        Panel contentPanel = new Panel(new BorderLayout(10, 10)) {
+            @Override
+            public void paint(Graphics g) {
+                super.paint(g);
+                if (backgroundImage != null) {
+                    g.drawImage(backgroundImage, 0, 0,
+                            getWidth(), getHeight(), this);
+                }
+            }
+        };
+
+        add(contentPanel);
+
+        // --------------------
+        // Header
+        // --------------------
+        Label header = new Label("Feedback Fusion", Label.CENTER);
+        header.setFont(new Font("Serif", Font.BOLD, 26));
+        header.setForeground(new Color(0, 80, 160));
+        contentPanel.add(header, BorderLayout.NORTH);
+
+        // --------------------
+        // Center form
+        // --------------------
+        Panel form = new Panel(new GridBagLayout());
+        // Slight translucency over the background for readability
+        form.setBackground(new Color(255, 255, 255, 200));
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(8, 10, 8, 10);
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+
+        // Row 0: ID
+        gbc.gridx = 0; gbc.gridy = 0;
+        form.add(new Label("ID (for Update/Delete):"), gbc);
+        gbc.gridx = 1; form.add(idField, gbc);
+
+        // Row 1: Category
+        gbc.gridx = 0; gbc.gridy = 1;
+        form.add(new Label("Category:"), gbc);
+        typeChoice.add("Food Quality");
+        typeChoice.add("Service");
+        typeChoice.add("Ambiance");
+        typeChoice.add("Cleanliness");
+        gbc.gridx = 1; form.add(typeChoice, gbc);
+
+        // Row 2: Rating
+        gbc.gridx = 0; gbc.gridy = 2;
+        form.add(new Label("Rating (1-5):"), gbc);
+        gbc.gridx = 1; form.add(ratingField, gbc);
+
+        // Row 3: Comments
+        gbc.gridx = 0; gbc.gridy = 3;
+        gbc.anchor = GridBagConstraints.NORTH;
+        form.add(new Label("Comments:"), gbc);
+        gbc.gridx = 1; gbc.anchor = GridBagConstraints.CENTER;
+        form.add(commentsArea, gbc);
+
+        contentPanel.add(form, BorderLayout.CENTER);
+
+        // --------------------
+        // South panel (buttons + status + list)
+        // --------------------
+        Panel south = new Panel(new BorderLayout(10, 10));
+
+        // Buttons row
+        Panel buttons = new Panel(new FlowLayout(FlowLayout.CENTER, 15, 10));
+        Button createBtn = new Button("Create");
+        Button readBtn   = new Button("Read All");
+        Button updateBtn = new Button("Update");
+        Button deleteBtn = new Button("Delete");
+        Button clearBtn  = new Button("Clear Fields");
+
+        // Basic styling for visibility
+        createBtn.setBackground(new Color(0, 153, 76));
+        createBtn.setForeground(Color.WHITE);
+        readBtn.setBackground(new Color(0, 102, 204));
+        readBtn.setForeground(Color.WHITE);
+        updateBtn.setBackground(new Color(255, 153, 0));
+        updateBtn.setForeground(Color.WHITE);
+        deleteBtn.setBackground(new Color(204, 0, 0));
+        deleteBtn.setForeground(Color.WHITE);
+        clearBtn.setBackground(new Color(120, 120, 120));
+        clearBtn.setForeground(Color.WHITE);
+
+        buttons.add(createBtn);
+        buttons.add(readBtn);
+        buttons.add(updateBtn);
+        buttons.add(deleteBtn);
+        buttons.add(clearBtn);
+
+        south.add(buttons, BorderLayout.NORTH);
+
+        // Status label (center)
+        statusLabel.setForeground(Color.DARK_GRAY);
+        south.add(statusLabel, BorderLayout.CENTER);
+
+        // List area (south)
+        listArea.setEditable(false);
+        south.add(listArea, BorderLayout.SOUTH);
+
+        contentPanel.add(south, BorderLayout.SOUTH);
+
+        // --------------------
+        // Actions / Event wiring
+        // --------------------
+        createBtn.addActionListener(e -> onCreate());
+        readBtn.addActionListener(e -> onReadAll());
+        updateBtn.addActionListener(e -> onUpdate());
+        deleteBtn.addActionListener(e -> onDelete());
+        clearBtn.addActionListener(e -> clearFields());
+
+        // Window close handler: dispose and exit
+        addWindowListener(new WindowAdapter() {
+            public void windowClosing(WindowEvent we) {
+                dispose();
+                System.exit(0);
+            }
+        });
+
+        // Finally, show the window
+        setVisible(true);
+    }
+
+    /**
+     * Creates a new feedback record using the values currently entered in the form.
+     * <ol>
+     *   <li>Reads Category, Rating, and Comments from the UI</li>
+     *   <li>Validates numeric rating</li>
+     *   <li>Delegates to {@link FeedbackService#create(Feedback)}</li>
+     *   <li>Clears the form and refreshes the list on success</li>
+     * </ol>
+     * <p>
+     * Any validation or SQL errors are caught and displayed in the status label.
+     * </p>
+     */
+    private void onCreate() {
+        try {
+            String type = typeChoice.getSelectedItem();
+            int rating = Integer.parseInt(ratingField.getText().trim());
+            String comments = commentsArea.getText().trim();
+
+            service.create(new Feedback(type, rating, comments));
+            statusOk("✅ Created successfully.");
+            clearFields();
+            onReadAll();
+        } catch (NumberFormatException ex) {
+            statusErr("❌ Rating must be a number.");
+        } catch (SQLException ex) {
+            statusErr("⚠ DB Error: " + ex.getMessage());
+        }
+    }
+
+    /**
+     * Retrieves all feedback records and renders them into the read-only list area
+     * in a simple, tab-separated table format. Also updates the status label with
+     * the number of records loaded.
+     * <p>
+     * Any SQL errors are caught and displayed in the status label.
+     * </p>
+     */
+    private void onReadAll() {
+        try {
+            List<Feedback> list = service.findAll();
+            StringBuilder sb = new StringBuilder();
+            sb.append("ID\tType\tRating\tComments\n");
+            sb.append("-------------------------------------------------------------\n");
+            for (Feedback f : list) {
+                sb.append(f.getId()).append('\t')
+                  .append(f.getFeedbackType()).append('\t')
+                  .append(f.getRating()).append('\t')
+                  .append(f.getComments() == null ? "" :
+                           f.getComments().replace('\n', ' '))
+                  .append('\n');
+            }
+            listArea.setText(sb.toString());
+            // Explicit repaint ensures the text area refreshes immediately on some AWT impls
+            listArea.repaint();
+            statusOk("📃 Loaded " + list.size() + " record(s).");
+        } catch (SQLException ex) {
+            statusErr("⚠ DB Error: " + ex.getMessage());
+        }
+    }
+
+    /**
+     * Updates an existing feedback record with the values currently entered in the form.
+     * <ol>
+     *   <li>Parses the ID (required)</li>
+     *   <li>Reads Category, Rating, and Comments</li>
+     *   <li>Delegates to {@link FeedbackService#update(Feedback)}</li>
+     *   <li>Clears the form and refreshes the list on success</li>
+     * </ol>
+     * <p>
+     * Validation or SQL errors are caught and displayed in the status label.
+     * </p>
+     */
+    private void onUpdate() {
+        try {
+            int id = Integer.parseInt(idField.getText().trim());
+            String type = typeChoice.getSelectedItem();
+            int rating = Integer.parseInt(ratingField.getText().trim());
+            String comments = commentsArea.getText().trim();
+
+            service.update(new Feedback(id, type, rating, comments));
+            statusOk("✏️ Updated ID " + id + " successfully.");
+            clearFields();
+            onReadAll();
+        } catch (NumberFormatException ex) {
+            statusErr("❌ ID and Rating must be numbers.");
+        } catch (SQLException ex) {
+            statusErr("⚠ DB Error: " + ex.getMessage());
+        }
+    }
+
+    /**
+     * Deletes a feedback record by the ID currently entered in the form.
+     * <ol>
+     *   <li>Parses the ID</li>
+     *   <li>Delegates to {@link FeedbackService#delete(int)}</li>
+     *   <li>Clears the form and refreshes the list on success</li>
+     * </ol>
+     * <p>
+     * Parsing or SQL errors are caught and displayed in the status label.
+     * </p>
+     */
+    private void onDelete() {
+        try {
+            int id = Integer.parseInt(idField.getText().trim());
+            service.delete(id);
+            statusOk("🗑️ Deleted ID " + id + " successfully.");
+            clearFields();
+            onReadAll();
+        } catch (NumberFormatException ex) {
+            statusErr("❌ ID must be a number.");
+        } catch (SQLException ex) {
+            statusErr("⚠ DB Error: " + ex.getMessage());
+        }
+    }
+
+    /**
+     * Resets the input controls to their default state:
+     * <ul>
+     *   <li>Clears ID, Rating, and Comments</li>
+     *   <li>Resets Category to the first option</li>
+     *   <li>Shows a "Form cleared." status message</li>
+     * </ul>
+     */
+    private void clearFields() {
+        idField.setText("");
+        ratingField.setText("");
+        commentsArea.setText("");
+        typeChoice.select(0);
+        statusOk("Form cleared.");
+    }
+
+    /**
+     * Sets the status label to a success message in green text and requests a repaint.
+     *
+     * @param msg message to display
+     */
+    private void statusOk(String msg) {
+        statusLabel.setForeground(new Color(0, 128, 0));
+        statusLabel.setText(msg);
+        statusLabel.repaint();
+    }
+
+    /**
+     * Sets the status label to an error message in red text and requests a repaint.
+     *
+     * @param msg message to display
+     */
+    private void statusErr(String msg) {
+        statusLabel.setForeground(Color.RED);
+        statusLabel.setText(msg);
+        statusLabel.repaint();
+    }
+}

@@ -1,0 +1,238 @@
+package com.feedbackfusion.presentation;
+
+import com.feedbackfusion.model.Feedback;
+import com.feedbackfusion.service.FeedbackService;
+
+import java.awt.*;
+import java.awt.event.*;
+import java.sql.SQLException;
+import java.util.List;
+import javax.imageio.ImageIO;
+import java.io.File;
+import java.io.IOException;
+
+public class FeedbackForm extends Frame {
+
+    private final FeedbackService service;
+
+    // UI fields
+    private final TextField idField = new TextField(6);
+    private final Choice typeChoice = new Choice();
+    private final TextField ratingField = new TextField(5);
+    private final TextArea commentsArea = new TextArea(4, 40);
+    private final TextArea listArea = new TextArea(12, 60);
+    private final Label statusLabel = new Label(" ");
+
+    // Background image
+    private Image backgroundImage;
+
+    public FeedbackForm(FeedbackService service) {
+        this.service = service;
+
+        // Load background image
+        try {
+            // Put your .png inside src/resources/ and use correct path
+            backgroundImage = ImageIO.read(new File("src/resources/background.png"));
+        } catch (IOException e) {
+            System.out.println("⚠ Background image not found, using plain color.");
+            backgroundImage = null;
+        }
+
+        setTitle("Feedback Fusion");
+        setSize(700, 600);
+
+        // Custom Panel with background
+        Panel contentPanel = new Panel(new BorderLayout(10, 10)) {
+            @Override
+            public void paint(Graphics g) {
+                super.paint(g);
+                if (backgroundImage != null) {
+                    g.drawImage(backgroundImage, 0, 0, getWidth(), getHeight(), this);
+                }
+            }
+        };
+
+        setLayout(new BorderLayout());
+        add(contentPanel);
+
+        // Header
+        Label header = new Label("Feedback Fusion", Label.CENTER);
+        header.setFont(new Font("Serif", Font.BOLD, 26));
+        header.setForeground(new Color(0, 80, 160));
+        contentPanel.add(header, BorderLayout.NORTH);
+
+        // Center form
+        Panel form = new Panel(new GridBagLayout());
+        form.setBackground(new Color(255, 255, 255, 200)); // white with transparency
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(8, 10, 8, 10);
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+
+        // Row 0: ID (for Update/Delete)
+        gbc.gridx = 0; gbc.gridy = 0; form.add(new Label("ID (for Update/Delete):"), gbc);
+        gbc.gridx = 1; form.add(idField, gbc);
+
+        // Row 1: Category (Choice)
+        gbc.gridx = 0; gbc.gridy = 1; form.add(new Label("Category:"), gbc);
+        typeChoice.add("Food Quality");
+        typeChoice.add("Service");
+        typeChoice.add("Ambiance");
+        typeChoice.add("Cleanliness");
+        gbc.gridx = 1; form.add(typeChoice, gbc);
+
+        // Row 2: Rating
+        gbc.gridx = 0; gbc.gridy = 2; form.add(new Label("Rating (1-5):"), gbc);
+        gbc.gridx = 1; form.add(ratingField, gbc);
+
+        // Row 3: Comments
+        gbc.gridx = 0; gbc.gridy = 3; gbc.anchor = GridBagConstraints.NORTH;
+        form.add(new Label("Comments:"), gbc);
+        gbc.gridx = 1; gbc.anchor = GridBagConstraints.CENTER;
+        form.add(commentsArea, gbc);
+
+        contentPanel.add(form, BorderLayout.CENTER);
+
+        // South: Buttons + Status + List
+        Panel south = new Panel(new BorderLayout(10, 10));
+
+        // Buttons row
+        Panel buttons = new Panel(new FlowLayout(FlowLayout.CENTER, 15, 10));
+        Button createBtn = new Button("Create");
+        Button readBtn   = new Button("Read All");
+        Button updateBtn = new Button("Update");
+        Button deleteBtn = new Button("Delete");
+        Button clearBtn  = new Button("Clear Fields");
+
+        // Style buttons
+        createBtn.setBackground(new Color(0, 153, 76)); createBtn.setForeground(Color.WHITE);
+        readBtn.setBackground(new Color(0, 102, 204)); readBtn.setForeground(Color.WHITE);
+        updateBtn.setBackground(new Color(255, 153, 0)); updateBtn.setForeground(Color.WHITE);
+        deleteBtn.setBackground(new Color(204, 0, 0));  deleteBtn.setForeground(Color.WHITE);
+        clearBtn.setBackground(new Color(120, 120, 120)); clearBtn.setForeground(Color.WHITE);
+
+        buttons.add(createBtn);
+        buttons.add(readBtn);
+        buttons.add(updateBtn);
+        buttons.add(deleteBtn);
+        buttons.add(clearBtn);
+
+        south.add(buttons, BorderLayout.NORTH);
+
+        // Status
+        statusLabel.setForeground(Color.DARK_GRAY);
+        south.add(statusLabel, BorderLayout.CENTER);
+
+        // List area
+        listArea.setEditable(false);
+        south.add(listArea, BorderLayout.SOUTH);
+
+        contentPanel.add(south, BorderLayout.SOUTH);
+
+        // Actions
+        createBtn.addActionListener(e -> onCreate());
+        readBtn.addActionListener(e -> onReadAll());
+        updateBtn.addActionListener(e -> onUpdate());
+        deleteBtn.addActionListener(e -> onDelete());
+        clearBtn.addActionListener(e -> clearFields());
+
+        // Close
+        addWindowListener(new WindowAdapter() {
+            public void windowClosing(WindowEvent we) {
+                dispose();
+                System.exit(0);
+            }
+        });
+
+        setVisible(true);
+    }
+
+    private void onCreate() {
+        try {
+            String type = typeChoice.getSelectedItem();
+            int rating = Integer.parseInt(ratingField.getText().trim());
+            String comments = commentsArea.getText().trim();
+
+            service.create(new Feedback(type, rating, comments));
+            statusOk("✅ Created successfully.");
+            clearFields();
+            onReadAll();
+        } catch (NumberFormatException ex) {
+            statusErr("❌ Rating must be a number.");
+        } catch (IllegalArgumentException ex) {
+            statusErr("❌ " + ex.getMessage());
+        } catch (SQLException ex) {
+            statusErr("⚠ DB Error: " + ex.getMessage());
+        }
+    }
+
+    private void onReadAll() {
+        try {
+            List<Feedback> list = service.findAll();
+            StringBuilder sb = new StringBuilder();
+            sb.append("ID\tType\tRating\tComments\n");
+            sb.append("-------------------------------------------------------------\n");
+            for (Feedback f : list) {
+                sb.append(f.getId()).append('\t')
+                  .append(f.getFeedbackType()).append('\t')
+                  .append(f.getRating()).append('\t')
+                  .append(f.getComments() == null ? "" : f.getComments().replace('\n', ' '))
+                  .append('\n');
+            }
+            listArea.setText(sb.toString());
+            statusOk("📃 Loaded " + list.size() + " record(s).");
+        } catch (SQLException ex) {
+            statusErr("⚠ DB Error: " + ex.getMessage());
+        }
+    }
+
+    private void onUpdate() {
+        try {
+            int id = Integer.parseInt(idField.getText().trim());
+            String type = typeChoice.getSelectedItem();
+            int rating = Integer.parseInt(ratingField.getText().trim());
+            String comments = commentsArea.getText().trim();
+
+            service.update(new Feedback(id, type, rating, comments));
+            statusOk("✏️ Updated ID " + id + " successfully.");
+            clearFields();
+            onReadAll();
+        } catch (NumberFormatException ex) {
+            statusErr("❌ ID and Rating must be numbers.");
+        } catch (IllegalArgumentException ex) {
+            statusErr("❌ " + ex.getMessage());
+        } catch (SQLException ex) {
+            statusErr("⚠ DB Error: " + ex.getMessage());
+        }
+    }
+
+    private void onDelete() {
+        try {
+            int id = Integer.parseInt(idField.getText().trim());
+            service.delete(id);
+            statusOk("🗑️ Deleted ID " + id + " successfully.");
+            clearFields();
+            onReadAll();
+        } catch (NumberFormatException ex) {
+            statusErr("❌ ID must be a number.");
+        } catch (SQLException ex) {
+            statusErr("⚠ DB Error: " + ex.getMessage());
+        }
+    }
+
+    private void clearFields() {
+        idField.setText("");
+        ratingField.setText("");
+        commentsArea.setText("");
+        typeChoice.select(0);
+    }
+
+    private void statusOk(String msg) {
+        statusLabel.setForeground(new Color(0, 128, 0));
+        statusLabel.setText(msg);
+    }
+
+    private void statusErr(String msg) {
+        statusLabel.setForeground(Color.RED);
+        statusLabel.setText(msg);
+    }
+}

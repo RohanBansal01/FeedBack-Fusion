@@ -1,0 +1,33 @@
+package com.feedbackfusion.repository;
+
+import java.io.InputStream;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+import java.util.Properties;
+
+/**
+ * Loads DB config from /db.properties and returns JDBC connections.
+ */
+public class DBConnection {
+    private static final Properties props = new Properties();
+
+    static {
+        try (InputStream in = DBConnection.class.getResourceAsStream("/db.properties")) {
+            if (in == null) {
+                System.err.println("db.properties not found on classpath root.");
+            } else {
+                props.load(in);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static Connection getConnection() throws SQLException {
+        String url = props.getProperty("db.url");
+        String user = props.getProperty("db.user");
+        String pass = props.getProperty("db.password");
+        return DriverManager.getConnection(url, user, pass);
+    }
+}

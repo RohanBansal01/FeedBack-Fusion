@@ -1,0 +1,32 @@
+package com.feedbackfusion.repository;
+
+import com.feedbackfusion.model.Feedback;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+
+/**
+ * The Data Access Object (DAO) for the Feedback entity.
+ * It encapsulates all JDBC operations, making the service layer unaware of
+ * how data is persisted. This promotes loose coupling.
+ */
+public class FeedbackRepository {
+
+    /**
+     * Saves a new feedback entry to the database.
+     * @param feedback The Feedback object to be saved.
+     * @throws SQLException If a database access error occurs.
+     */
+    public void save(Feedback feedback) throws SQLException {
+        String sql = "INSERT INTO feedback (feedback_type, rating, comments) VALUES (?, ?, ?)";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setString(1, feedback.getFeedbackType());
+            pstmt.setInt(2, feedback.getRating());
+            pstmt.setString(3, feedback.getComments());
+
+            pstmt.executeUpdate();
+        }
+    }
+}

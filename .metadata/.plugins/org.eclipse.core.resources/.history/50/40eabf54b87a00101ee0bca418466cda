@@ -1,0 +1,30 @@
+package com.feedbackfusion.app;
+import java.awt.*;
+import java.io.IOException;
+import javax.imageio.ImageIO;
+
+public class TestBG extends Frame {
+    private Image background;
+
+    public TestBG() {
+        try {
+            background = ImageIO.read(getClass().getResource("/resources/background.png"));
+        } catch (IOException | IllegalArgumentException e) {
+            System.out.println("Image not found: " + e.getMessage());
+        }
+
+        setSize(400, 400);
+        setVisible(true);
+    }
+
+    @Override
+    public void paint(Graphics g) {
+        if (background != null) {
+            g.drawImage(background, 0, 0, getWidth(), getHeight(), this);
+        }
+    }
+
+    public static void main(String[] args) {
+        new TestBG();
+    }
+}

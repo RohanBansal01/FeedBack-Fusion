@@ -1,0 +1,67 @@
+package com.feedbackfusion.repository;
+
+import com.feedbackfusion.model.Feedback;
+
+import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * Repository (DAO) responsible for CRUD on "feedback" table.
+ */
+public class FeedbackRepository {
+
+    // CREATE
+    public void create(Feedback feedback) throws SQLException {
+        String sql = "INSERT INTO feedback (feedback_type, rating, comments) VALUES (?, ?, ?)";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, feedback.getFeedbackType());
+            ps.setInt(2, feedback.getRating());
+            ps.setString(3, feedback.getComments());
+            ps.executeUpdate();
+        }
+    }
+
+    // READ ALL
+    public List<Feedback> findAll() throws SQLException {
+        String sql = "SELECT id, feedback_type, rating, comments FROM feedback ORDER BY id DESC";
+        List<Feedback> list = new ArrayList<>();
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                list.add(new Feedback(
+                        rs.getInt("id"),
+                        rs.getString("feedback_type"),
+                        rs.getInt("rating"),
+                        rs.getString("comments")
+                ));
+            }
+        }
+        return list;
+    }
+
+    // UPDATE
+    public void update(Feedback feedback) throws SQLException {
+        String sql = "UPDATE feedback SET feedback_type = ?, rating = ?, comments = ? WHERE id = ?";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, feedback.getFeedbackType());
+            ps.setInt(2, feedback.getRating());
+            ps.setString(3, feedback.getComments());
+            ps.setInt(4, feedback.getId());
+            ps.executeUpdate();
+        }
+    }
+
+    // DELETE
+    public void deleteById(int id) throws SQLException {
+        String sql = "DELETE FROM feedback WHERE id = ?";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, id);
+            ps.executeUpdate();
+        }
+    }
+}

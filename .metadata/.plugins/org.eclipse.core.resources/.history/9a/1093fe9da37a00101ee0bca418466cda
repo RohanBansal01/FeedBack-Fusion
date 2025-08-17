@@ -1,0 +1,5 @@
+package com.feedbackfusion.repository;
+
+public class FeedbackRepository {
+
+}

@@ -1,0 +1,5 @@
+package com.feedbackfusion.service;
+
+public class FeedbackValidator {
+
+}

@@ -1,0 +1,80 @@
+
+package com.feedbackfusion.service;
+
+import com.feedbackfusion.model.Feedback;
+import com.feedbackfusion.repository.FeedbackRepository;
+
+import java.sql.SQLException;
+import java.util.List;
+
+/**
+ * Service layer that contains the business logic for managing feedback.
+ * <p>
+ * This class performs validation and delegates CRUD operations
+ * to the {@link FeedbackRepository}.
+ * </p>
+ */
+public class FeedbackService {
+    private final FeedbackRepository repo = new FeedbackRepository();
+
+    /**
+     * Creates a new feedback entry after validating it.
+     *
+     * @param feedback the {@link Feedback} object to create
+     * @throws SQLException if a database error occurs
+     * @throws IllegalArgumentException if validation fails
+     */
+    public void create(Feedback feedback) throws SQLException {
+        validate(feedback);
+        repo.create(feedback);
+    }
+
+    /**
+     * Retrieves all feedback entries from the database.
+     *
+     * @return a list of {@link Feedback} objects
+     * @throws SQLException if a database error occurs
+     */
+    public List<Feedback> findAll() throws SQLException {
+        return repo.findAll();
+    }
+
+    /**
+     * Updates an existing feedback entry after validating it.
+     *
+     * @param feedback the {@link Feedback} object with updated values
+     * @throws SQLException if a database error occurs
+     * @throws IllegalArgumentException if the ID is missing or validation fails
+     */
+    public void update(Feedback feedback) throws SQLException {
+        if (feedback.getId() == null) throw new IllegalArgumentException("ID is required for update.");
+        validate(feedback);
+        repo.update(feedback);
+    }
+
+    /**
+     * Deletes a feedback entry by its ID.
+     *
+     * @param id the unique identifier of the feedback to delete
+     * @throws SQLException if a database error occurs
+     */
+    public void delete(int id) throws SQLException {
+        repo.deleteById(id);
+    }
+
+    /**
+     * Validates feedback input before saving or updating.
+     *
+     * @param f the {@link Feedback} object to validate
+     * @throws IllegalArgumentException if feedback type is empty or rating is out of range
+     */
+    private void validate(Feedback f) {
+        if (f.getFeedbackType() == null || f.getFeedbackType().trim().isEmpty()) {
+            throw new IllegalArgumentException("Feedback type cannot be empty.");
+        }
+        if (f.getRating() < 1 || f.getRating() > 5) {
+            throw new IllegalArgumentException("Rating must be between 1 and 5.");
+        }
+    }
+}
+

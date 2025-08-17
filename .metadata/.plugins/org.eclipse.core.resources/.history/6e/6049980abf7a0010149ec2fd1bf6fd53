@@ -1,0 +1,42 @@
+package com.feedbackfusion.service;
+
+import com.feedbackfusion.model.Feedback;
+import com.feedbackfusion.repository.FeedbackRepository;
+
+import java.sql.SQLException;
+import java.util.List;
+
+/**
+ * Business logic layer (validation + orchestration).
+ */
+public class FeedbackService {
+    private final FeedbackRepository repo = new FeedbackRepository();
+
+    public void create(Feedback feedback) throws SQLException {
+        validate(feedback);
+        repo.create(feedback);
+    }
+
+    public List<Feedback> findAll() throws SQLException {
+        return repo.findAll();
+    }
+
+    public void update(Feedback feedback) throws SQLException {
+        if (feedback.getId() == null) throw new IllegalArgumentException("ID is required for update.");
+        validate(feedback);
+        repo.update(feedback);
+    }
+
+    public void delete(int id) throws SQLException {
+        repo.deleteById(id);
+    }
+
+    private void validate(Feedback f) {
+        if (f.getFeedbackType() == null || f.getFeedbackType().trim().isEmpty()) {
+            throw new IllegalArgumentException("Feedback type cannot be empty.");
+        }
+        if (f.getRating() < 1 || f.getRating() > 5) {
+            throw new IllegalArgumentException("Rating must be between 1 and 5.");
+        }
+    }
+}

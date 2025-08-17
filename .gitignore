@@ -1,0 +1,35 @@
+# Java class files
+*.class
+
+# Log files
+*.log
+
+# BlueJ
+*.ctxt
+
+# Mobile Tools for Java (J2ME)
+.mtj.tmp/
+
+# Package Files
+*.jar
+*.war
+*.nar
+*.ear
+*.zip
+*.tar.gz
+*.rar
+
+# IDE specific files
+/.idea/
+/*.iml
+*.ipr
+*.iws
+/.settings/
+/.vscode/
+/*.project
+/*.classpath
+
+# Build folders
+/bin/
+/build/
+/target/
