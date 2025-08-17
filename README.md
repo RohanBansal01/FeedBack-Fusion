@@ -1,7 +1,7 @@
 
 # Feedback Fusion
 
-[![Java](https://img.shields.io/badge/Language-Java-orange)](https://www.java.com/) 
+[![Java + AWT](https://img.shields.io/badge/Language-Java%20%2B%20AWT-orange)](https://www.java.com/) 
 [![License: MIT](https://img.shields.io/badge/License-MIT-green)](LICENSE)
 [![GitHub stars](https://img.shields.io/github/stars/RohanBansal/FeedbackFusion?style=social)](https://github.com/RohanBansal/FeedbackFusion/stargazers)
 [![GitHub forks](https://img.shields.io/github/forks/RohanBansal/FeedbackFusion?style=social)](https://github.com/RohanBansal/FeedbackFusion/network/members)
@@ -51,7 +51,7 @@ It provides a user-friendly GUI to perform standard CRUD operations (Create, Rea
 ---
 
 ## Tech Stack
-- **Language:** Java (AWT)
+- **Language:** Java + (AWT)
 - **Database:** MySQL via JDBC
 - **Image Handling:** `javax.imageio.ImageIO` for background images
 - **IDE:** Eclipse / IntelliJ IDEA / NetBeans
