@@ -41,7 +41,7 @@ It provides a user-friendly GUI to perform standard CRUD operations (Create, Rea
 
 ## Screenshots
 
-*Add screenshots of the app here:* 
+
 <img width="847" height="745" alt="feedback Fusion " src="https://github.com/user-attachments/assets/dd184676-4dc4-41b4-825d-1d50926f76ee" />
 
 
